@@ -76,14 +76,15 @@
 
 var cat1 = ["with EAS"];
 var cat2 = ["with EAS", "lagacy"];
-var valueMax = 20;
+var powerMax = 20;
+var fpsMax = 20;
 
 // create the real time chart
 var chart1 = realTimeChartMulti()
     .title("Performance")
     .yTitle("FPS")
     .xTitle("Time")
-    .yDomain(cat1) // initial y domain (note array)
+    .yDomain([0,fpsMax])
     .border(true)
     .width(900)
     .height(350);
@@ -92,7 +93,7 @@ var chart2 = realTimeChartMulti()
     .title("Power Consumption")
     .yTitle("Current(mA)")
     .xTitle("Time")
-    .yDomain(cat2) // initial y domain (note array)
+    .yDomain([0,powerMax])
     .border(true)
     .width(900)
     .height(350);
@@ -169,6 +170,7 @@ function dataGenerator() {
 	    category: cat1[i+1],
 	    //type: shapes[Math.round(Math.random() * (shapes.length - 1))], // the module currently doesn't support dynamically changed svg types (need to add key function to data, or method to dynamically replace svg object – tbd)
 	    type: "circle",
+	    value: Math.round(Math.random() * fpsMax),
 	    size: Math.max(Math.round(Math.random() * 12), 4),
 	  };
 
@@ -191,7 +193,7 @@ function dataGenerator() {
 	    category: cat2[i+1],
 	    //type: shapes[Math.round(Math.random() * (shapes.length - 1))], // the module currently doesn't support dynamically changed svg types (need to add key function to data, or method to dynamically replace svg object – tbd)
 	    type: "circle",
-	    value: Math.round(Math.random() * valueMax),
+	    value: Math.round(Math.random() * powerMax),
 	    size: Math.max(Math.round(Math.random() * 12), 4),
 	  };
 

@@ -27,6 +27,7 @@ function realTimeChartMulti() {
       widthNav, heightNav,
       xAxisG, yAxisG,
       xAxis, yAxis,
+      paths, dataline,
       svg;
 
   // create the chart
@@ -143,7 +144,23 @@ function realTimeChartMulti() {
 
     // define main chart scales
     x = d3.time.scale().range([0, width]);
-    y = d3.scale.ordinal().domain(yDomain).rangeRoundPoints([height, 0], 1)
+    y = d3.scale.linear().domain(yDomain).range([height, 0])
+
+    // create line function
+    var lineFunc = d3.svg.line()
+        .interpolate('basic')
+        .x(function(d, i){
+            return x(d.time);
+        })
+        .y(function(d){
+            return y(d.value);
+        });
+
+    // add data line
+    paths = main.append('g');
+    dataline = paths.append("path")
+        .data(data)
+        .style("stroke", "green");
 
     // define main chart axis
     xAxis = d3.svg.axis().orient("bottom");
@@ -253,9 +270,14 @@ function realTimeChartMulti() {
         if (d.time.getTime() > startTime.getTime()) return true;
       })
 
+      // shift line dataline
+      paths.attr('transform', null)
+        .transition();
+
+      data.shift();
+
       // determine number of categories
-      var categoryCount = yDomain.length;
-      if (debug) console.log("yDomain", yDomain)
+      //if (debug) console.log("yDomain", yDomain)
 
       // here we bind the new data to the main chart
       // note: no key function is used here; therefore the data binding is
@@ -307,8 +329,9 @@ function realTimeChartMulti() {
             var retVal = null;
             switch (getTagName(this)) {
               case "rect":
-                var size = d.size || 6;
-                retVal = y(d.category) - size / 2;
+                //var size = d.size || 6;
+                //retVal = y(d.category) - size / 2;
+                retVal = y(d.value);
                 break;
               default:
             }
@@ -328,7 +351,8 @@ function realTimeChartMulti() {
             var retVal = null;
             switch (getTagName(this)) {
               case "circle":
-                retVal = y(d.category);
+                //retVal = y(d.category);
+                retVal = y(d.value);
                 break;
               default:
             }
@@ -380,7 +404,7 @@ function realTimeChartMulti() {
       // add items
       updateSelNav.enter().append("circle")
           .attr("r", 1)
-          .attr("fill", "black")
+          .attr("fill", "black");
 
       // added items now part of update selection; set coordinates of points
       updateSelNav
@@ -388,7 +412,8 @@ function realTimeChartMulti() {
             return Math.round(xNav(d.time));
           })
           .attr("cy", function(d) {
-            return yNav(d.category);
+            return yNav(d.value);
+            //return yNav(d.category);
           })
     
     } // end refreshChart function
