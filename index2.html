@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <!-- Author: Bo Ericsson -->
+  <title>Real Time Line Chart</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+  <!--<link rel=stylesheet type=text/css href="../_lib/bootstrap.min.css" media="all">-->
+  <style>
+  .axis text {
+    font: 12px sans-serif;
+  }
+  .chartarea {
+    border: 1px solid #ffdc66;
+    margin: 5px;
+    vertical-align: middle;
+  }
+  .chartTitle {
+    font-family: Helvetica, Arial, sans-serif;
+    font-size: 18px;
+    font-weight: bold;
+    color: white; 
+    text-anchor: middle; 
+  }
+  .axis .title {
+    font-family: Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    font-weight: bold;
+    color: white; 
+    text-anchor: middle;
+  }
+  .axis path,
+  .axis line {
+    fill: none;
+    stroke-width: 2px;
+    stroke: #ffcc00;
+    shape-rendering: crispEdges;
+  }
+  .x.axis path {
+    fill: none;
+    stroke-width: 2px;
+    stroke: #ffcc00;
+    shape-rendering: crispEdges;
+  }
+  .nav .area {
+    fill: lightgrey;
+    stroke-width: 0px;
+  }
+  .nav .line {
+    fill: none;
+    stroke: darkgrey;
+    stroke-width: 1px;
+  }
+  .viewport {
+    stroke: grey;
+    fill: black;
+    fill-opacity: 0.3;
+  }
+  .viewport .extent {
+    fill: orange;
+  }
+  .maintitle {
+    border: none;
+    background: #ffcc00;
+    padding-top: 15px;
+    padding-bottom: 15px;
+    text-align:center;
+  }
+.well h3 {
+  color: white;
+}
+  .dataline path {
+    fill: none;
+    stroke: blue;
+    stroke-width: 2px;
+  }
+  .legend {
+    padding: 10px;
+    position: absolute;
+    top: 50%;
+  }
+  </style>
+<body>
+
+<div style="max-height: 400px;">
+
+  <div class="maintitle well">
+    <h3>Performance & Power Consumption</h3>
+  </div>
+
+  <div class="containter">
+
+  <div class="row chartarea">
+    <div class="col-md-1" style="height:350px">
+      <div class="legend">
+        <i class="fa fa-stop" aria-hidden="true"></i> EAS
+      </div>
+    </div>
+    <div class="col-md-11" id="viewDiv1">
+    </div>
+  </div>
+
+  <div class="row chartarea">
+    <div class="col-md-1" style="height:350px">
+      <div class="legend">
+        <p>EAS</p>
+        <p>lagacy</p>
+      </div>
+    </div>
+    <div class="col-md-11" id="viewDiv2">
+    </div>
+  </div>
+
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+<!--<script src="../_lib/d3.min.js"></script>-->
+<script src="realTimeLine.js"></script>
+<script>
+'use strict';
+
+var cat1 = ["with EAS"];
+var cat2 = ["with EAS", "lagacy"];
+var powerMax = 20;
+var fpsMax = 20;
+var period = 100; // ms
+
+// create the real time chart
+var chart1 = realTimeLine()
+    .title("Performance")
+    .yTitle("FPS")
+    .xTitle("Time")
+    .maxValue(fpsMax)
+    .interval(period)
+    .dataTypes(cat1)
+    .width(900)
+    .height(350);
+	
+var chart2 = realTimeLine()
+    .title("Power Consumption")
+    .yTitle("Current(mA)")
+    .xTitle("Time")
+    .maxValue(powerMax)
+    .interval(period)
+    .dataTypes(cat2)
+    .width(900)
+    .height(350);
+
+// invoke the chart
+var chartDiv1 = d3.select("#viewDiv1").append("div")
+    .attr("id", "chartDiv1")
+    .call(chart1);
+
+	// invoke the chart
+var chartDiv2 = d3.select("#viewDiv2").append("div")
+    .attr("id", "chartDiv2")
+    .call(chart2);
+	
+// alternative and equivalent invocation
+//chart(chartDiv); 
+
+// configure the data generator
+
+// mean and deviation for generation of time intervals
+var tX = 5; // time constant, multiple of one second
+var meanMs = 1000 * tX, // milliseconds
+    dev = 200 * tX; // std dev
+
+// define time scale
+var timeScale = d3.scale.linear()
+    .domain([300 * tX, 1700 * tX])
+    .range([300 * tX, 1700 * tX])
+    .clamp(true);
+
+// define function that returns normally distributed random numbers
+var normal = d3.random.normal(meanMs, dev);
+
+// define color scale
+var color = d3.scale.category10();
+
+// in a normal use case, real time data would arrive through the network or some other mechanism
+var d = -1;
+var timeout = 0;
+
+// define data generator
+function dataGenerator() {
+
+  setInterval(function() {
+
+      var now = new Date();
+
+      // create new data item
+	  var obj1 = {
+	    // complex data item; four attributes (type, color, opacity and size) are changing dynamically with each iteration (as an example)
+	    time: now,
+	    value: Math.round(Math.random() * fpsMax),
+	  };
+      // send the datum to the chart
+      chart1.datum([obj1]);      
+
+      // create new data item
+	  var obj2 = {
+	    // complex data item; four attributes (type, color, opacity and size) are changing dynamically with each iteration (as an example)
+	    time: now,
+	    value: Math.round(Math.random() * powerMax),
+	  };
+
+	  var obj3 = {
+	    // complex data item; four attributes (type, color, opacity and size) are changing dynamically with each iteration (as an example)
+	    time: now,
+	    value: Math.round(Math.random() * powerMax),
+	  };
+
+
+      // send the datum to the chart
+      chart2.datum([obj2, obj3]);      
+
+    // do forever
+    //dataGenerator();
+
+  }, period);
+
+  // start refresher
+  chart1.start();
+  chart2.start();
+}
+
+// start the data generator
+dataGenerator();
+
+</script>
